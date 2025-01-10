@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BestBuy Scraper</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="container mx-auto max-w-4xl">
+        <h1 class="text-4xl font-bold text-center text-blue-600 mb-8">BestBuy Scraper</h1>
+        
+        <form id="searchForm" class="flex flex-col items-center gap-4 mb-8">
+            <input type="text" id="query" name="query" placeholder="Search for products..." class="input input-bordered w-full max-w-md" />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Price</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody id="results">
+                    <!-- Results will be appended here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $("#searchForm").on("submit", function(e) {
+            e.preventDefault();
+            const query = $("#query").val();
+            $.post("/search", { query }, function(data) {
+                const resultsTable = $("#results");
+                resultsTable.empty();
+                data.forEach(item => {
+                    resultsTable.append(`
+                        <tr>
+                            <td><img src="${item.img_src}" alt="Product Image" class="w-20 rounded-md"></td>
+                            <td class="font-medium">${item.title}</td>
+                            <td class="text-green-600 font-semibold">${item.price}</td>
+                            <td><a href="${item.anchor_link}" target="_blank" class="link link-primary">View</a></td>
+                        </tr>
+                    `);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
