@@ -1,25 +1,38 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 from bs4 import BeautifulSoup
+import random
 
 app = Flask(__name__)
 
 class BestBuyScraper:
+    def __init__(self):
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/91.0.864.48',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+        ]
+
     def get_bestbuy_search(self, query):
         query_string = query.replace(' ', '+')
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': random.choice(self.user_agents)
         }
         url = f"https://www.bestbuy.com/site/searchpage.jsp?st={query_string}"
-        req = requests.get(url, headers=headers)
-
-        if req.status_code != 200:
+        try:
+            req = requests.get(url, headers=headers, timeout=10)
+            req.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data from Best Buy: {e}")
             return []
 
         soup = BeautifulSoup(req.content, 'html.parser')
         search_list = soup.find('ol', {'class': 'sku-item-list'})
 
         if not search_list:
+            print("No search list found.")
             return []
 
         data_dict_list = []
