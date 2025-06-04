@@ -3,56 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BestBuy Scraper</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>BestBuy React Scraper</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
-<body class="bg-gray-100 p-4">
-    <div class="container mx-auto max-w-4xl">
-        <h1 class="text-4xl font-bold text-center text-blue-600 mb-8">BestBuy Scraper</h1>
-        
-        <form id="searchForm" class="flex flex-col items-center gap-4 mb-8">
-            <input type="text" id="query" name="query" placeholder="Search for products..." class="input input-bordered w-full max-w-md" />
-            <button type="submit" class="btn btn-primary">Search</button>
-        </form>
-
-        <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
-                <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Title</th>
-                        <th>Price</th>
-                        <th>Link</th>
-                    </tr>
-                </thead>
-                <tbody id="results">
-                    <!-- Results will be appended here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script>
-        $("#searchForm").on("submit", function(e) {
-            e.preventDefault();
-            const query = $("#query").val();
-            $.post("/search", { query }, function(data) {
-                const resultsTable = $("#results");
-                resultsTable.empty();
-                data.forEach(item => {
-                    resultsTable.append(`
-                        <tr>
-                            <td><img src="${item.img_src}" alt="Product Image" class="w-20 rounded-md"></td>
-                            <td class="font-medium">${item.title}</td>
-                            <td class="text-green-600 font-semibold">${item.price}</td>
-                            <td><a href="${item.anchor_link}" target="_blank" class="link link-primary">View</a></td>
-                        </tr>
-                    `);
+<body class="bg-gray-100">
+    <div id="root"></div>
+    <script type="text/babel">
+        function App() {
+            const [query, setQuery] = React.useState('');
+            const [results, setResults] = React.useState([]);
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!query.trim()) return;
+                const params = new URLSearchParams();
+                params.append('query', query);
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
                 });
-            });
-        });
+                const data = await response.json();
+                setResults(data);
+            };
+            return (
+                <div>
+                    <section className="h-72 bg-center bg-cover flex items-center justify-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1050&q=80')", backgroundAttachment: 'fixed'}}>
+                        <h1 className="text-5xl text-white font-bold drop-shadow-lg">BestBuy Scraper</h1>
+                    </section>
+                    <div className="container mx-auto p-4 max-w-4xl">
+                        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 mt-6">
+                            <input value={query} onChange={e => setQuery(e.target.value)} type="text" placeholder="Search for products..." className="input input-bordered w-full" />
+                            <button type="submit" className="btn btn-primary">Search</button>
+                        </form>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                            {results.map((item, idx) => (
+                                <div key={idx} className="card bg-base-100 shadow-xl">
+                                    <figure className="px-4 pt-4">
+                                        <img src={item.img_src} alt="Product" className="rounded-xl h-40 object-cover" />
+                                    </figure>
+                                    <div className="card-body items-center text-center">
+                                        <h2 className="card-title text-lg">{item.title}</h2>
+                                        <p className="text-green-600 font-semibold">{item.price}</p>
+                                        <div className="card-actions">
+                                            <a href={item.anchor_link} target="_blank" rel="noopener" className="btn btn-sm btn-secondary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
