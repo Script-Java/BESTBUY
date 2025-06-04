@@ -71,6 +71,8 @@ def index():
 @app.route('/search', methods=['POST'])
 def search():
     query = request.form.get('query')
+    if not query:
+        return jsonify([])
     scraper = BestBuyScraper()
     results = scraper.get_bestbuy_search(query)
     return jsonify(results)
